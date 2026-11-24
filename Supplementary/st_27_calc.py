@@ -1,0 +1,16 @@
+from __future__ import annotations
+import sys
+sys.dont_write_bytecode=True
+from pathlib import Path
+from io import StringIO
+import numpy as np
+import pandas as pd
+HERE=Path(__file__).resolve().parent
+OUTPUT=HERE/'st_27.csv'
+MEASUREMENT_MODEL={'MC_samples_per_joint_and_isolated':20000,'acceptance_probability':0.45,'bias_correction':'none: deterministic full-pulse bias, nonlinear ensemble-centering shift and separate physical-model/truncation shifts are preserved, not calibrated to the direct audit','conditional_probability':'q=(1-c)/2+c(1-e)*[B_j+Re(exp(-i theta) S_j)/2]','count_layer':'exact Binomial(N,q) independently for each setting conditional on the common latents; only one count layer','estimator':'[sum signs*(p0-ppi)+i sum signs*(ppi/2-p3pi/2)]/[4*c0*(1-e0)*Khat]','fast_events':'Born measurement, unresolved Lindblad trajectories, independent preparation success/dark state, and symmetric readout errors are marginalized into one conditional Bernoulli probability per setting; no independent variance is added for any of these events','latent_distributions':'independent standard Gaussians transformed by listed scales; T1, T2 and calibrated M_sigma have a 0.05 times nominal positive floor; e clipped to [0,0.8], c to [0.05,1]; raw normals and effective floored latents both saved; no additional readout or preparation shot-noise term','latent_variables':['amplitude1','amplitude2','frequency1','frequency2','T2','T1','preparation_probability','readout_contrast','M_sigma_calibration'],'preparation':'incoherent good-state versus analyzer-dark outcome mixture, success probability 1-e; no arbitrary coherent preparation-bias term; coherent leakage outside this model is not covered','profiles':[{'M_sigma_sigma':0.05,'N':20000,'T1_sigma':0.2,'T2':0.75,'T2_sigma':0.15,'amplitude_sigma':0.03,'contrast':0.94,'contrast_sigma':0.02,'frequency_sigma':0.05,'name':'batch_static_conservative','prep':0.1,'prep_sigma':0.03},{'M_sigma_sigma':0.02,'N':200000,'T1_sigma':0.1,'T2':3.0,'T2_sigma':0.08,'amplitude_sigma':0.01,'contrast':0.98,'contrast_sigma':0.005,'frequency_sigma':0.015,'name':'batch_static_improved','prep':0.04,'prep_sigma':0.01}],'raw_attempt_definition':'16*N/.45 signal attempts only; excludes offline linear/analyzer calibration; conditional accepted-shot likelihood has no extra loss Bernoulli layer','reference':'offline full nonlinear nominal unit-link kernel, independent M_sigma calibration error; physical batch offsets are absent from the offline nominal kernel','timescale':'every latent offset is drawn once per complete data set and is identical for all accepted shots in all 16 settings; independent data sets redraw offsets','unit':'one complete accepted 16-setting measurement data set','within_dataset_correlation':'perfect sharing of each latent across all drive/analyzer settings; the nine distinct latent variables independent by assumption'}
+QUANTITIES=['T2','N','amplitude_sigma','frequency_sigma','T2_sigma','T1_sigma','prep','prep_sigma','contrast','contrast_sigma','M_sigma_sigma']
+def calculate():
+ values={profile['name'].removeprefix('batch_static_'):[profile[key]for key in QUANTITIES]for profile in MEASUREMENT_MODEL['profiles']}
+ return pd.DataFrame({'quantity':QUANTITIES,**values})
+if __name__=='__main__':
+ calculate().to_csv(OUTPUT,index=False)
